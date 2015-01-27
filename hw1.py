@@ -26,22 +26,38 @@ def compareGraphs():
 def lucasKanade(POI, oldFrame, newFrame):
 	W = gaussianWeight()
 	for i in range(len(POI)):
-		omegaNew = np.zeros([KERNEL, KERNEL])
-		omegaOld = np.zeros([KERNEL, KERNEL])
+		omegaNew = buildKernel(newFrame, POI[i][0][0], POI[i][0][1], KERNEL)
+		omegaOld = buildKernel(oldFrame, POI[i][0][0], POI[i][0][1], KERNEL)
 		for j in range(KERNEL):
 			for k in range(KERNEL):
-				
+				pass
 	pass
+
+def buildKernel(gradientFrame, centerX, centerY, kernelSize):
+	kernel = np.zeros([kernelSize,kernelSize])
+	mean = kernelSize//2 #kernelSize MUST be odd
+	for i in range(kernelSize):
+		for j in range(kernelSize):
+			try:
+				kernel[j,i] = gradientFrame[j - mean + centerY, i - mean + centerX]
+			except:
+				pass #we're on the edge of the image and there's no data to grab
+	return kernel
 
 def gaussianWeight():
 	SIGMA = 1 #the standard deviation of your normal curve
-	weight = np.zeros(KERNEL)
+	CORRELATION = 0 #see wiki for multivariate normal distributions
+	weight = np.zeros([KERNEL,KERNEL])
 	cpt = KERNEL%2+KERNEL//2 #gets the center point
 	for i in range(len(weight)):
-		pt = i + 1
-		weight[i] = 1/SIGMA/(2*np.pi)**.5*np.exp(-(pt-cpt)**2/(2*SIGMA**2))
+		for j in range(len(weight)):
+			ptx = i + 1
+			pty = j + 1
+			weight[i,j] = 1/(2*np.pi*SIGMA**2)/(1-CORRELATION**2)**.5*np.exp(-1/(2*(1-CORRELATION**2))*((ptx-cpt)**2+(pty-cpt)**2)/(SIGMA**2))
+			# weight[i,j] = 1/SIGMA/(2*np.pi)**.5*np.exp(-(pt-cpt)**2/(2*SIGMA**2))
 	print weight
-	return np.diag(weight)
+	return weight
+	# return np.diag(weight)
 	
 
 img = cv2.imread('sphere/sphere.0.bmp',0)
