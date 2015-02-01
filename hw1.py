@@ -12,14 +12,15 @@ def showImage(image,name):
 
 def getGradient(gradX,gradY):
 	return np.power(gradX**2 + gradY**2,.5)
+
 def compareGraphs():
 	plt.subplot(2,2,1),plt.imshow(grad,cmap = 'gray')
 	plt.title('Austin grad test'), plt.xticks([]), plt.yticks([])
 	plt.subplot(2,2,2),plt.imshow(img,cmap = 'gray')
 	plt.scatter(test[:,0,0],test[:,0,1])
-	plt.subplot(2,2,3),plt.imshow(sobelx,cmap = 'gray')
+	plt.subplot(2,2,3),plt.imshow(sobelX,cmap = 'gray')
 	plt.title('Sobel X'), plt.xticks([]), plt.yticks([])
-	plt.subplot(2,2,4),plt.imshow(sobely,cmap = 'gray')
+	plt.subplot(2,2,4),plt.imshow(sobelY,cmap = 'gray')
 	plt.title('Sobel Y'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
@@ -44,6 +45,14 @@ def buildKernel(gradientFrame, centerX, centerY, kernelSize):
 				pass #we're on the edge of the image and there's no data to grab
 	return kernel
 
+def buildA(gradientX, gradientY, centerX, centerY, kernelSize):
+	gradX = buildKernel(gradientX, centerX, centerY, kernelSize)
+	gradY = buildKernel(gradientY, centerX, centerY, kernelSize)
+	AX = gradX.reshape((1,kernelSize**2))
+	AY = gradY.reshape((1,kernelSize**2))
+	A = np.column_stack([AX.transpose(), AY.transpose()])
+	return A
+
 def gaussianWeight():
 	SIGMA = 1 #the standard deviation of your normal curve
 	CORRELATION = 0 #see wiki for multivariate normal distributions
@@ -55,10 +64,16 @@ def gaussianWeight():
 			pty = j + 1
 			weight[i,j] = 1/(2*np.pi*SIGMA**2)/(1-CORRELATION**2)**.5*np.exp(-1/(2*(1-CORRELATION**2))*((ptx-cpt)**2+(pty-cpt)**2)/(SIGMA**2))
 			# weight[i,j] = 1/SIGMA/(2*np.pi)**.5*np.exp(-(pt-cpt)**2/(2*SIGMA**2))
-	print weight
+	weight = weight.reshape((1,KERNEL**2))
+	weight = np.array(weight)[0] #convert to a 1D array
+	weight = np.diag(weight) #convert to n**2xn**2 diagonal matrix
 	return weight
 	# return np.diag(weight)
 	
+def buildB(gradTotal, centerX, centerY, kernelSize):
+	B = buildKernel(gradTotal, centerX, centerY, kernelSize)
+	B = B.reshape((1,kernelSize**2))
+	return -B.transpose()
 
 img = cv2.imread('sphere/sphere.0.bmp',0)
 # img = cv2.imread('rubic/rubic.0.bmp',0)
@@ -72,8 +87,8 @@ shape = img.shape
 grad = np.zeros([shape[0],shape[1]])
 
 # grad = np.gradient(img)
-sobelx = cv2.Sobel(img,cv2.CV_64F,1,0,ksize=5)
-sobely = cv2.Sobel(img,cv2.CV_64F,0,1,ksize=5)
+sobelX = cv2.Sobel(img,cv2.CV_64F,1,0,ksize=5)
+sobelY = cv2.Sobel(img,cv2.CV_64F,0,1,ksize=5)
 
 # showImage(grad,'gradient')
 
@@ -81,7 +96,7 @@ sobely = cv2.Sobel(img,cv2.CV_64F,0,1,ksize=5)
 for i in range(shape[0]): #gradient in the y direction
 	for j in range(shape[1]): #gradient in the x direction
 		try: #try to calculate and normalize
-			grad[i,j] = getGradient(sobelx[i,j],sobely[i,j])
+			grad[i,j] = getGradient(sobelX[i,j],sobelY[i,j])
 		except: 
 			pass
 
@@ -89,7 +104,7 @@ for i in range(shape[0]): #gradient in the y direction
 # showImage(img,"original")
 
 test = cv2.goodFeaturesToTrack(img,20,.01,20)
-compareGraphs()
+# compareGraphs()
 
 gaussianWeight()
 
