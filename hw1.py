@@ -78,25 +78,6 @@ def totalGrad(gradX,gradY):
 				pass
 	return grad
 
-def lucasKanade(POI, oldFrame, newFrame):
-	#evaluate the first frame's POI
-
-
-	#for every
-
-
-
-
-
-	W = gaussianWeight()
-	for i in range(len(POI)):
-		omegaNew = buildKernel(newFrame, POI[i][0][0], POI[i][0][1], KERNEL)
-		omegaOld = buildKernel(oldFrame, POI[i][0][0], POI[i][0][1], KERNEL)
-		for j in range(KERNEL):
-			for k in range(KERNEL):
-				pass
-	pass
-
 # def LK2():
 KERNEL = 7 #must be odd/-
 #get your first image
