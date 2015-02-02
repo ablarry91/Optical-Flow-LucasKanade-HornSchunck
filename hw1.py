@@ -3,10 +3,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time
 
-a = 0
-b = 0
-w = 0
-
 def showImage(image,frameName):
 	cv2.imshow(frameName,img)
 	cv2.waitKey(0) #if a keystroke is detected in this time, do not continue
@@ -25,11 +21,11 @@ def compareGraphs():
 	# plt.title('Sobel X'), plt.xticks([]), plt.yticks([])
 	# plt.subplot(2,2,4),plt.imshow(sobelY,cmap = 'gray')
 	# plt.title('Sobel Y'), plt.xticks([]), plt.yticks([])
-	# plt.ion() #makes it so plots don't block code execution
-	plt.imshow(img,cmap = 'gray')
+	plt.ion() #makes it so plots don't block code execution
+	plt.imshow(imgNew,cmap = 'gray')
 	plt.scatter(POI[:,0,0],POI[:,0,1])
 	for i in range(len(POI)):
-		plt.arrow(POI[i,0,0],POI[i,0,1],V[i,0]*5,V[i,1]*5)
+		plt.arrow(POI[i,0,0],POI[i,0,1],V[i,0]*20,V[i,1]*20)
 	# plt.arrow(POI[:,0,0],POI[:,0,1],0,-5)
 	plt.show()
 
@@ -44,13 +40,43 @@ def buildKernel(gradientFrame, centerX, centerY, kernelSize):
 				pass #we're on the edge of the image and there's no data to grab
 	return kernel
 
-def buildA(gradientX, gradientY, centerX, centerY, kernelSize):
-	gradX = buildKernel(gradientX, centerX, centerY, kernelSize)
-	gradY = buildKernel(gradientY, centerX, centerY, kernelSize)
-	AX = gradX.reshape((1,kernelSize**2))
-	AY = gradY.reshape((1,kernelSize**2))
-	A = np.column_stack([AX.transpose(), AY.transpose()])
+
+def buildA(img, centerY, centerX, kernelSize):
+	#build a kernel containing pixel intensities
+	mean = kernelSize//2
+	count = 0
+	home = img[centerY, centerX] #storing the intensity of the center pixel
+	A = np.zeros([kernelSize**2, 2])
+	for j in range(-mean,mean+1): #advance the y
+		for i in range(-mean,mean+1): #advance the x
+			if i == 0:
+				Ax = 0
+			else:
+				Ax = (home - img[centerY+j, centerX+i])/i
+			if j == 0:
+				Ay = 0
+			else:
+				Ay = (home - img[centerY+j, centerX+i])/j
+			#write to A
+			A[count] = np.array([Ay, Ax])
+			count += 1
+	# print np.linalg.norm(A)
 	return A
+
+def buildB(imgNew, imgOld, centerY, centerX, kernelSize):
+	mean = kernelSize//2
+	count = 0
+	home = imgNew[centerY, centerX]
+
+	B = np.zeros([kernelSize**2])
+	for j in range(-mean,mean+1):
+		for i in range(-mean,mean+1):
+			Bt = imgNew[centerY+j,centerX+i] - imgOld[centerY+j,centerX+i]
+			B[count] = Bt
+			count += 1
+		# print np.linalg.norm(B)
+	return B
+
 
 def gaussianWeight(kernelSize):
 	SIGMA = 1 #the standard deviation of your normal curve
@@ -68,22 +94,6 @@ def gaussianWeight(kernelSize):
 	weight = np.diag(weight) #convert to n**2xn**2 diagonal matrix
 	return weight
 	# return np.diag(weight)
-	
-def buildB(gradTotal, centerX, centerY, kernelSize):
-	B = buildKernel(gradTotal, centerX, centerY, kernelSize)
-	B = B.reshape((1,kernelSize**2))
-	return -B.transpose()
-
-def totalGrad(gradX,gradY):
-	shape = gradX.shape
-	grad = np.zeros([shape[0],shape[1]])
-	for i in range(shape[0]): #gradient in the y direction
-		for j in range(shape[1]): #gradient in the x direction
-			try: #try to calculate and normalize
-				grad[i,j] = getGradient(gradX[i,j],gradY[i,j])
-			except: 
-				pass
-	return grad
 
 def getPOI(xSize, ySize, kernelSize):
 	mean = kernelSize//2
@@ -119,17 +129,11 @@ count = 0
 directory = 'box/box.'
 # directory = 'office/office.'
 fileName = directory + str(count) + '.bmp'
-img = cv2.imread(fileName,0)
-img = cv2.GaussianBlur(img,(7,7),0)
+imgOld = cv2.imread(fileName,0)
+# img = cv2.GaussianBlur(img,(7,7),0)
 
 #evaluate the first frame's POI
-# POI = cv2.goodFeaturesToTrack(img,20,.01,20)
 POI = getPOI(200,200,KERNEL)
-
-#evaluate the first frame's gradients
-gradXOld = cv2.Sobel(img,cv2.CV_64F,1,0,ksize=5)
-gradYOld = cv2.Sobel(img,cv2.CV_64F,0,1,ksize=5)
-gradOld = totalGrad(gradXOld,gradYOld)
 
 #get the weights 
 W = gaussianWeight(KERNEL)
@@ -138,10 +142,10 @@ W = gaussianWeight(KERNEL)
 while True:
 	#load the next image
 	count += 1
-	img = cv2.imread(directory + str(count) + '.bmp',0)
-	img = cv2.GaussianBlur(img,(7,7),0)	
+	imgNew = cv2.imread(directory + str(count) + '.bmp',0)
+	# img = cv2.GaussianBlur(img,(7,7),0)	
 	try:
-		if img.any():
+		if imgNew.any():
 			# print 'it exists'
 			pass
 	except:
@@ -149,20 +153,14 @@ while True:
 		print 'count is',count
 		break
 
-	#evaluate the new image's gradients
-	gradXNew = cv2.Sobel(img,cv2.CV_64F,1,0,ksize=5)
-	gradYNew = cv2.Sobel(img,cv2.CV_64F,0,1,ksize=5)
-	gradNew = totalGrad(gradXNew,gradYNew)
-
-
 	#evaluate every POI
 	V = np.zeros([(POI.shape)[0],2])
 	for i in range(len(POI)):	
 		#build A
-		A = buildA(gradXNew, gradYNew, POI[i][0][0], POI[i][0][1], KERNEL)
+		A = buildA(imgNew, POI[i][0][0], POI[i][0][1], KERNEL)
 
 		#build b
-		B = buildB(gradNew-gradOld, POI[i][0][0], POI[i][0][1], KERNEL)
+		B = buildB(imgNew, imgOld, POI[i][0][0], POI[i][0][1], KERNEL)
 
 		#solve for v		
 		try:
@@ -172,6 +170,9 @@ while True:
 			V[i,1] = Vpt[1]
 		except:
 			pass
+		if np.linalg.norm(A) !=0:
+			print i
+			break
 
 	compareGraphs()
 	# time.sleep(1)
@@ -181,67 +182,13 @@ while True:
 	break
 
 	#update lists
-	gradXOld = gradXNew
-	gradYOld = gradYNew
-	gradOld = gradNew
+	imgOld = imgNew
 	# POI = cv2.goodFeaturesToTrack(img,20,.01,20)
 	POI = getPOI(200,200,KERNEL)
-
-	#visualize
-
-
-	# break
-
-
-		#estimate the new point
-	#estimate the new POI
-
-	#determine edge within the POI
-
-
 
 # img = cv2.imread('sphere/sphere.0.bmp',0)
 # img = cv2.imread('rubic/rubic.0.bmp',0)
 # img = cv2.imread('office/office.0.bmp',0)
 
 # showImage(img,'original')
-blur = cv2.GaussianBlur(img,(5,5),0)
-
-def lucas_kanade_np(im1, im2, win=2):
-	assert im1.shape == im2.shape
-	I_x = np.zeros(im1.shape)
-	I_y = np.zeros(im1.shape)
-	I_t = np.zeros(im1.shape)
-	I_x[1:-1, 1:-1] = (im1[1:-1, 2:] - im1[1:-1, :-2]) / 2
-	I_y[1:-1, 1:-1] = (im1[2:, 1:-1] - im1[:-2, 1:-1]) / 2
-	I_t[1:-1, 1:-1] = im1[1:-1, 1:-1] - im2[1:-1, 1:-1]
-	params = np.zeros(im1.shape + (5,)) #Ix2, Iy2, Ixy, Ixt, Iyt
-	params[..., 0] = I_x * I_x # I_x2
-	params[..., 1] = I_y * I_y # I_y2
-	params[..., 2] = I_x * I_y # I_xy
-	params[..., 3] = I_x * I_t # I_xt
-	params[..., 4] = I_y * I_t # I_yt
-	del I_x, I_y, I_t
-	cum_params = np.cumsum(np.cumsum(params, axis=0), axis=1)
-	del params
-	win_params = (cum_params[2 * win + 1:, 2 * win + 1:] -
-				  cum_params[2 * win + 1:, :-1 - 2 * win] -
-				  cum_params[:-1 - 2 * win, 2 * win + 1:] +
-				  cum_params[:-1 - 2 * win, :-1 - 2 * win])
-	del cum_params
-	op_flow = np.zeros(im1.shape + (2,))
-	det = win_params[...,0] * win_params[..., 1] - win_params[..., 2] **2
-	op_flow_x = np.where(det != 0,
-						 (win_params[..., 1] * win_params[..., 3] -
-						  win_params[..., 2] * win_params[..., 4]) / det,
-						 0)
-	op_flow_y = np.where(det != 0,
-						 (win_params[..., 0] * win_params[..., 4] -
-						  win_params[..., 2] * win_params[..., 3]) / det,
-						 0)
-	op_flow[win + 1: -1 - win, win + 1: -1 - win, 0] = op_flow_x[:-1, :-1]
-	op_flow[win + 1: -1 - win, win + 1: -1 - win, 1] = op_flow_y[:-1, :-1]
-	return op_flow
-
-
-# compareGraphs()
+blur = cv2.GaussianBlur(imgNew,(5,5),0)
