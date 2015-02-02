@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+import time
 
 a = 0
 b = 0
@@ -16,14 +17,20 @@ def getGradient(gradX,gradY):
 	return np.power(gradX**2 + gradY**2,.5)
 
 def compareGraphs():
-	plt.subplot(2,2,1),plt.imshow(grad,cmap = 'gray')
-	plt.title('Austin grad test'), plt.xticks([]), plt.yticks([])
-	plt.subplot(2,2,2),plt.imshow(img,cmap = 'gray')
-	plt.scatter(test[:,0,0],test[:,0,1])
-	plt.subplot(2,2,3),plt.imshow(sobelX,cmap = 'gray')
-	plt.title('Sobel X'), plt.xticks([]), plt.yticks([])
-	plt.subplot(2,2,4),plt.imshow(sobelY,cmap = 'gray')
-	plt.title('Sobel Y'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(2,2,1),plt.imshow(grad,cmap = 'gray')
+	# plt.title('Austin grad test'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(2,2,2),plt.imshow(img,cmap = 'gray')
+	# plt.scatter(test[:,0,0],test[:,0,1])
+	# plt.subplot(2,2,3),plt.imshow(sobelX,cmap = 'gray')
+	# plt.title('Sobel X'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(2,2,4),plt.imshow(sobelY,cmap = 'gray')
+	# plt.title('Sobel Y'), plt.xticks([]), plt.yticks([])
+	plt.ion() #makes it so plots don't block code execution
+	plt.imshow(img,cmap = 'gray')
+	plt.scatter(POI[:,0,0],POI[:,0,1])
+	for i in range(len(POI)):
+		plt.arrow(POI[i,0,0],POI[i,0,1],V[i,0]*20,V[i,1]*20)
+	# plt.arrow(POI[:,0,0],POI[:,0,1],0,-5)
 	plt.show()
 
 def buildKernel(gradientFrame, centerX, centerY, kernelSize):
@@ -79,11 +86,12 @@ def totalGrad(gradX,gradY):
 	return grad
 
 # def LK2():
-KERNEL = 7 #must be odd/-
+KERNEL = 3 #must be odd/-
 #get your first image
 count = 0
-fileName = 'sphere/sphere.' + str(count) + '.bmp'
+fileName = 'office/office.' + str(count) + '.bmp'
 img = cv2.imread(fileName,0)
+img = cv2.GaussianBlur(img,(7,7),0)
 
 #evaluate the first frame's POI
 POI = cv2.goodFeaturesToTrack(img,20,.01,20)
@@ -100,12 +108,14 @@ W = gaussianWeight(KERNEL)
 while True:
 	#load the next image
 	count += 1
-	img = cv2.imread('sphere/sphere.' + str(count) + '.bmp',0)
+	img = cv2.imread('office/office.' + str(count) + '.bmp',0)
+	img = cv2.GaussianBlur(img,(7,7),0)
 	try:
 		if img.any():
-			print 'it exists'
+			# print 'it exists'
+			pass
 	except:
-		print 'it doesnt exist'
+		# print 'it doesnt exist'
 		print 'count is',count
 		break
 
@@ -116,6 +126,7 @@ while True:
 
 
 	#evaluate every POI
+	V = np.zeros([20,2])
 	for i in range(len(POI)):	
 		#build A
 		A = buildA(gradXNew-gradXOld, gradYNew-gradYOld, POI[i][0][0], POI[i][0][1], KERNEL)
@@ -125,32 +136,41 @@ while True:
 
 		#solve for v		
 		try:
-			V = np.matrix((A.T).dot(W**2).dot(A)).I.dot(A.T).dot(W**2).dot(B)
+			Vpt = np.matrix((A.T).dot(W**2).dot(A)).I.dot(A.T).dot(W**2).dot(B)
+			# print Vpt
+			V[i,0] = Vpt[0]
+			V[i,1] = Vpt[1]
 		except:
 			pass
+
+	#update lists
+	gradXOld = gradXNew
+	gradYOld = gradYNew
+	gradOld = gradNew
+	POI = cv2.goodFeaturesToTrack(img,20,.01,20)
+
+	#visualize
+
+	compareGraphs()
+	# time.sleep(1)
+	# time.sleep(2)
+	# plt.close("all")
+	print count
+	# break
+
+
+		#estimate the new point
 	#estimate the new POI
 
 	#determine edge within the POI
 
 
 
-img = cv2.imread('sphere/sphere.0.bmp',0)
+# img = cv2.imread('sphere/sphere.0.bmp',0)
 # img = cv2.imread('rubic/rubic.0.bmp',0)
 # img = cv2.imread('office/office.0.bmp',0)
 
 # showImage(img,'original')
 blur = cv2.GaussianBlur(img,(5,5),0)
-# showImage(img,'blurred')
 
-# showImage(grad,'gradient')
-
-# determine the gradient
-
-
-# showImage(grad,"gradient")
-# showImage(img,"original")
-
-test = cv2.goodFeaturesToTrack(img,20,.01,20)
-
-# lucasKanade()
 # compareGraphs()
