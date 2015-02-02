@@ -159,7 +159,7 @@ while True:
 	V = np.zeros([(POI.shape)[0],2])
 	for i in range(len(POI)):	
 		#build A
-		A = buildA(gradXNew-gradXOld, gradYNew-gradYOld, POI[i][0][0], POI[i][0][1], KERNEL)
+		A = buildA(gradXNew, gradYNew, POI[i][0][0], POI[i][0][1], KERNEL)
 
 		#build b
 		B = buildB(gradNew-gradOld, POI[i][0][0], POI[i][0][1], KERNEL)
