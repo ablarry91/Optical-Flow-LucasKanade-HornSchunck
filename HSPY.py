@@ -42,14 +42,15 @@ def HS(im1, im2, alpha, ite,):
 		vAvg = cv2.filter2D(v,-1,kernel)
 
 		u = (fx.dot(uAvg)+fy.dot(vAvg)+ft).dot(ft)
-		# print np.linalg.norm(u)
-		print np.linalg.norm(ft)
 		u = uAvg - u/(alpha+fx**2+fy**2)
+
+		v = (fx.dot(uAvg)+fy.dot(vAvg)+ft).dot(ft)
+		v = vAvg - u/(alpha+fx**2+fy**2)
 
 		# u = uAvg - (np.multiply(fx,(np.multiply(fx,uAvg)+np.multiply(fy,vAvg)+ft)))
 		# u = np.divide(u,(alpha**2 + fx**2 + fy**2))
-		v = vAvg - (np.multiply(fy,(np.multiply(fx,vAvg)+np.multiply(fy,vAvg)+ft)))
-		v = np.divide(v,(alpha**2 + fx**2 + fy**2))
+		# v = vAvg - (np.multiply(fy,(np.multiply(fx,vAvg)+np.multiply(fy,vAvg)+ft)))
+		# v = np.divide(v,(alpha**2 + fx**2 + fy**2))
 		# print i
 	return (u,v)
 
@@ -62,7 +63,8 @@ def computeDerivatives(im1, im2):
 	#apply the filter to every pixel using OpenCV's convolution function
 	fx = cv2.filter2D(im1,-1,kernelX) + cv2.filter2D(im2,-1,kernelX)
 	fy = cv2.filter2D(im1,-1,kernelY) + cv2.filter2D(im2,-1,kernelY)
-	ft = im2 - im1
+	# ft = im2 - im1
+	ft = cv2.filter2D(im2,-1,kernelT) + cv2.filter2D(im1,-1,-kernelT)
 	return (fx,fy,ft)
 
 def compareGraphs():
@@ -70,8 +72,13 @@ def compareGraphs():
 	plt.imshow(imgNew,cmap = 'gray')
 	# plt.scatter(POI[:,0,1],POI[:,0,0])
 	for i in range(len(u)):
-		for j in range(len(u)):
-			plt.arrow(i,j,u[i,j]*1,v[i,j]*1, color = 'red')
+		if i%5 ==0:
+			for j in range(len(u)):
+				if j%5 == 0:
+					plt.arrow(j,i,v[i,j]*.00001,u[i,j]*.00001, color = 'red')
+				pass
+		print i
 	# plt.arrow(POI[:,0,0],POI[:,0,1],0,-5)
 	plt.show()
 [u,v] = HS(imgOld, imgNew, 1, 100)
+compareGraphs()

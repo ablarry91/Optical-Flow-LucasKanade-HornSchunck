@@ -66,6 +66,7 @@ def computeDerivatives(im2, im1):
 	#apply the filter to every pixel using OpenCV's convolution function
 	fx = cv2.filter2D(im1,-1,kernelX) + cv2.filter2D(im2,-1,kernelX)
 	fy = cv2.filter2D(im1,-1,kernelY) + cv2.filter2D(im2,-1,kernelY)
+	# ft = cv2.filter2D(im1,-1,kernelT) + cv2.filter2D(im2,-1,-kernelT)
 	ft = im2 - im1
 	return (fx,fy,ft)
 
@@ -89,8 +90,8 @@ def getPOI(xSize, ySize, kernelSize):
 	return POI
 
 def LK():
-	KERNEL = 13 #must be odd/
-	FILTER = 5
+	KERNEL = 7 #must be odd/
+	FILTER = 13
 
 	#get your first image
 	count = 0
@@ -124,7 +125,7 @@ def LK():
 			break
 
 		#get gradients
-		[fx,fy,ft] = computeDerivatives(imgOld,imgNew)
+		[fx,fy,ft] = computeDerivatives(imgNew,imgOld)
 
 		#evaluate every POI
 		V = np.zeros([(POI.shape)[0],2])
