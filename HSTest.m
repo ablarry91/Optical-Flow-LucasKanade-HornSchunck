@@ -26,10 +26,12 @@ function [u, v] = HS(im1, im2, alpha, ite, uInitial, vInitial, displayFlow, disp
 
 %% Default parameters
 if nargin<1 || nargin<2
-      im1=imread('sphere.1.bmp');
-      im2=imread('sphere.2.bmp');
-%     im1=imread('office.1.bmp');
-%     im2=imread('office.2.bmp');
+%       im1=imread('sphere.1.bmp');
+%       im2=imread('sphere.2.bmp');
+%      im1=imread('office.16.bmp');
+%      im2=imread('office.17.bmp');
+          im1=imread('rubic.16.bmp');
+      im2=imread('rubic.17.bmp');
 end
 if nargin<3
     alpha=1;
@@ -47,6 +49,9 @@ elseif size(uInitial,1) ==0 || size(vInitial,1)==0
 end
 if nargin<7
     displayFlow=1;
+end
+if size(size(im1),2)==3
+    im1=rgb2gray(im1);
 end
 if nargin<8
     displayImg=im1;
@@ -222,5 +227,5 @@ for i=1:size(u,1)
         end
     end
 end
-quiver(u, v, scale, 'color', 'b', 'linewidth', 2);
+quiver(u, v, scale, 'color', 'r', 'linewidth', 2);
 set(gca,'YDir','reverse');
