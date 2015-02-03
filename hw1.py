@@ -78,7 +78,13 @@ def buildB(imgNew, imgOld, centerX, centerY, kernelSize):
 	return B
 
 
-def gaussianWeight(kernelSize):
+def gaussianWeight(kernelSize, even=False):
+	if even == True:
+		weight = np.ones([kernelSize,kernelSize])
+		weight = weight.reshape((1,kernelSize**2))
+		weight = np.array(weight)[0]
+		weight = np.diag(weight)
+		return weight
 	SIGMA = 1 #the standard deviation of your normal curve
 	CORRELATION = 0 #see wiki for multivariate normal distributions
 	weight = np.zeros([kernelSize,kernelSize])
@@ -123,17 +129,18 @@ def buildFlowMap(vX, vY, ptX, ptY):
 			count += 1
 	return flow
 
-KERNEL = 3 #must be odd/
+KERNEL = 5 #must be odd/
 FILTER = 7
 
 #get your first image
 count = 0
 # directory = 'box/box.'
 # directory = 'office/office.'
+# directory = 'rubic/rubic.'
 directory = 'sphere/sphere.'
 fileName = directory + str(count) + '.bmp'
 imgOld = cv2.imread(fileName,0)
-imgOld = cv2.GaussianBlur(imgOld,(FILTER,FILTER),0)
+imgOld = cv2.GaussianBlur(imgOld,(FILTER,FILTER),1)
 
 #evaluate the first frame's POI
 POI = getPOI(200,200,KERNEL)
@@ -146,7 +153,7 @@ while True:
 	#load the next image
 	count += 1
 	imgNew = cv2.imread(directory + str(count) + '.bmp',0)
-	imgNew = cv2.GaussianBlur(imgNew,(FILTER,FILTER),0)	
+	imgNew = cv2.GaussianBlur(imgNew,(FILTER,FILTER),1)	
 	try:
 		if imgNew.any():
 			# print 'it exists'
