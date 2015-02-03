@@ -35,23 +35,23 @@ def HS(im1, im2, alpha, ite,):
 	# Averaging kernel
 	kernel=np.matrix([[1/12, 1/6, 1/12],[1/6, 0, 1/6],[1/12, 1/6, 1/12]])
 
+	print fx[100,100],fy[100,100],ft[100,100]
+
 	# Iteration to reduce error
 	for i in range(ite):
 		# Compute local averages of the flow vectors
 		uAvg = cv2.filter2D(u,-1,kernel)
 		vAvg = cv2.filter2D(v,-1,kernel)
 
-		u = (fx.dot(uAvg)+fy.dot(vAvg)+ft).dot(ft)
-		u = uAvg - u/(alpha+fx**2+fy**2)
+		uNumer = (fx.dot(uAvg) + fy.dot(vAvg) + ft).dot(ft)
+		uDenom = alpha + fx**2 + fy**2
+		u = uAvg - np.divide(uNumer,uDenom)
 
-		v = (fx.dot(uAvg)+fy.dot(vAvg)+ft).dot(ft)
-		v = vAvg - u/(alpha+fx**2+fy**2)
+		# print np.linalg.norm(u)
 
-		# u = uAvg - (np.multiply(fx,(np.multiply(fx,uAvg)+np.multiply(fy,vAvg)+ft)))
-		# u = np.divide(u,(alpha**2 + fx**2 + fy**2))
-		# v = vAvg - (np.multiply(fy,(np.multiply(fx,vAvg)+np.multiply(fy,vAvg)+ft)))
-		# v = np.divide(v,(alpha**2 + fx**2 + fy**2))
-		# print i
+		vNumer = (fx.dot(uAvg) + fy.dot(vAvg) + ft).dot(ft)
+		vDenom = alpha + fx**2 + fy**2
+		v = vAvg - np.divide(vNumer,vDenom)
 	return (u,v)
 
 def computeDerivatives(im1, im2):
@@ -67,6 +67,19 @@ def computeDerivatives(im1, im2):
 	ft = cv2.filter2D(im2,-1,kernelT) + cv2.filter2D(im1,-1,-kernelT)
 	return (fx,fy,ft)
 
+def smoothImage(img,kernel):
+	G = gaussFilter(kernel)
+	smoothedImage=cv2.filter2D(img,-1,G)
+	smoothedImage=cv2.filter2D(smoothedImage,-1,G.T)
+	return smoothedImage
+
+def gaussFilter(segma):
+	kSize = 2*(segma*3)
+	x = range(-kSize/2,kSize/2,1+1/kSize)
+	x = np.array(x)
+	G = (1/(2*np.pi)**.5*segma) * np.exp(-x**2/(2*segma**2))
+	return G
+
 def compareGraphs():
 	plt.ion() #makes it so plots don't block code execution
 	plt.imshow(imgNew,cmap = 'gray')
@@ -77,7 +90,7 @@ def compareGraphs():
 				if j%5 == 0:
 					plt.arrow(j,i,v[i,j]*.00001,u[i,j]*.00001, color = 'red')
 				pass
-		print i
+		# print i
 	# plt.arrow(POI[:,0,0],POI[:,0,1],0,-5)
 	plt.show()
 [u,v] = HS(imgOld, imgNew, 1, 100)
