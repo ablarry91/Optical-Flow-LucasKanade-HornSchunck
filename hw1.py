@@ -23,9 +23,9 @@ def compareGraphs():
 	# plt.title('Sobel Y'), plt.xticks([]), plt.yticks([])
 	plt.ion() #makes it so plots don't block code execution
 	plt.imshow(imgNew,cmap = 'gray')
-	plt.scatter(POI[:,0,0],POI[:,0,1])
+	# plt.scatter(POI[:,0,1],POI[:,0,0])
 	for i in range(len(POI)):
-		plt.arrow(POI[i,0,0],POI[i,0,1],V[i,0]*20,V[i,1]*20)
+		plt.arrow(POI[i,0,1],POI[i,0,0],V[i,1]*1,V[i,0]*1, color = 'red')
 	# plt.arrow(POI[:,0,0],POI[:,0,1],0,-5)
 	plt.show()
 
@@ -41,7 +41,7 @@ def buildKernel(gradientFrame, centerX, centerY, kernelSize):
 	return kernel
 
 
-def buildA(img, centerY, centerX, kernelSize):
+def buildA(img, centerX, centerY, kernelSize):
 	#build a kernel containing pixel intensities
 	mean = kernelSize//2
 	count = 0
@@ -63,7 +63,7 @@ def buildA(img, centerY, centerX, kernelSize):
 	# print np.linalg.norm(A)
 	return A
 
-def buildB(imgNew, imgOld, centerY, centerX, kernelSize):
+def buildB(imgNew, imgOld, centerX, centerY, kernelSize):
 	mean = kernelSize//2
 	count = 0
 	home = imgNew[centerY, centerX]
@@ -106,8 +106,8 @@ def getPOI(xSize, ySize, kernelSize):
 	count = 0
 	for i in range(yStep):
 		for j in range(xStep):
-			POI[count,0,0] = xPos
-			POI[count,0,1] = yPos
+			POI[count,0,1] = xPos
+			POI[count,0,0] = yPos
 			xPos += kernelSize
 			count += 1
 		xPos = mean
@@ -122,15 +122,18 @@ def buildFlowMap(vX, vY, ptX, ptY):
 			flow[j,i] = (vX[count]**2+vY[count]**2)**.5
 			count += 1
 	return flow
-# def LK2():
-KERNEL = 7 #must be odd/-
+
+KERNEL = 3 #must be odd/
+FILTER = 7
+
 #get your first image
 count = 0
-directory = 'box/box.'
+# directory = 'box/box.'
 # directory = 'office/office.'
+directory = 'sphere/sphere.'
 fileName = directory + str(count) + '.bmp'
 imgOld = cv2.imread(fileName,0)
-# img = cv2.GaussianBlur(img,(7,7),0)
+imgOld = cv2.GaussianBlur(imgOld,(FILTER,FILTER),0)
 
 #evaluate the first frame's POI
 POI = getPOI(200,200,KERNEL)
@@ -143,7 +146,7 @@ while True:
 	#load the next image
 	count += 1
 	imgNew = cv2.imread(directory + str(count) + '.bmp',0)
-	# img = cv2.GaussianBlur(img,(7,7),0)	
+	imgNew = cv2.GaussianBlur(imgNew,(FILTER,FILTER),0)	
 	try:
 		if imgNew.any():
 			# print 'it exists'
@@ -157,29 +160,32 @@ while True:
 	V = np.zeros([(POI.shape)[0],2])
 	for i in range(len(POI)):	
 		#build A
-		A = buildA(imgNew, POI[i][0][0], POI[i][0][1], KERNEL)
+		A = buildA(imgNew, POI[i][0][1], POI[i][0][0], KERNEL)
 
 		#build b
-		B = buildB(imgNew, imgOld, POI[i][0][0], POI[i][0][1], KERNEL)
+		B = buildB(imgNew, imgOld, POI[i][0][1], POI[i][0][0], KERNEL)
 
 		#solve for v		
 		try:
 			Vpt = np.matrix((A.T).dot(W**2).dot(A)).I.dot(A.T).dot(W**2).dot(B)
 			# print Vpt
-			V[i,0] = Vpt[0]
-			V[i,1] = Vpt[1]
+			V[i,0] = Vpt[0,0]
+			V[i,1] = Vpt[0,1]
 		except:
+			# Vpt = np.matrix([0,0])
+			# print 'skip called'
 			pass
-		if np.linalg.norm(A) !=0:
-			print i
-			break
+		# if np.linalg.norm(Vpt) !=0:
+			# print 'woop',Vpt
+			# break
 
 	compareGraphs()
 	# time.sleep(1)
 	# time.sleep(2)
 	# plt.close("all")
 	print count
-	break
+	if count == 1:
+		break
 
 	#update lists
 	imgOld = imgNew
