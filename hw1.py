@@ -130,7 +130,7 @@ def buildFlowMap(vX, vY, ptX, ptY):
 	return flow
 
 KERNEL = 5 #must be odd/
-FILTER = 7
+FILTER = 3
 
 #get your first image
 count = 0

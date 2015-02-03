@@ -1,6 +1,18 @@
-#upload images
-#convert to grayscale
-#smooth
+
+
+
+
+
+FILTER = 7
+
+#upload images# 
+# directory = 'box/box.'
+# directory = 'office/office.'
+# directory = 'rubic/rubic.'
+directory = 'sphere/sphere.'
+fileName = directory + str(count) + '.bmp'
+imgOld = cv2.imread(fileName,0)
+imgOld = cv2.GaussianBlur(imgOld,(FILTER,FILTER),1)
 
 HS(imgOld, imgNew, 1, 100, 0, 0)
 
