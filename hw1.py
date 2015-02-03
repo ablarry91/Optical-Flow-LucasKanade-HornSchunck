@@ -11,28 +11,6 @@ def compareGraphs(imgOld, imgNew, POI, V):
 	# plt.arrow(POI[:,0,0],POI[:,0,1],0,-5)
 	plt.show()
 
-# def buildA(img, centerX, centerY, kernelSize):
-# 	#build a kernel containing pixel intensities
-# 	mean = kernelSize//2
-# 	count = 0
-# 	home = img[centerY, centerX] #storing the intensity of the center pixel
-# 	A = np.zeros([kernelSize**2, 2])
-# 	for j in range(-mean,mean+1): #advance the y
-# 		for i in range(-mean,mean+1): #advance the x
-# 			if i == 0:
-# 				Ax = 0
-# 			else:
-# 				Ax = (home - img[centerY+j, centerX+i])/i
-# 			if j == 0:
-# 				Ay = 0
-# 			else:
-# 				Ay = (home - img[centerY+j, centerX+i])/j
-# 			#write to A
-# 			A[count] = np.array([Ay, Ax])
-# 			count += 1
-# 	# print np.linalg.norm(A)
-# 	return A
-
 def buildA(fx,fy,centerX,centerY,kernelSize):
 	#build a kernel containing pixel intensities
 	mean = kernelSize//2
@@ -55,20 +33,6 @@ def buildB(ft,centerX,centerY,kernelSize):
 			B[count] = ft[centerY+j,centerX+i]
 			count += 1
 	return B
-
-# def buildB(imgNew, imgOld, centerX, centerY, kernelSize):
-# 	mean = kernelSize//2
-# 	count = 0
-# 	home = imgNew[centerY, centerX]
-
-# 	B = np.zeros([kernelSize**2])
-# 	for j in range(-mean,mean+1):
-# 		for i in range(-mean,mean+1):
-# 			Bt = imgNew[centerY+j,centerX+i] - imgOld[centerY+j,centerX+i]
-# 			B[count] = Bt
-# 			count += 1
-# 		# print np.linalg.norm(B)
-# 	return B
 
 def gaussianWeight(kernelSize, even=False):
 	if even == True:
@@ -93,7 +57,7 @@ def gaussianWeight(kernelSize, even=False):
 	return weight
 	# return np.diag(weight)
 
-def computeDerivatives(im1, im2):
+def computeDerivatives(im2, im1):
 	# build kernels for calculating derivatives
 	kernelX = np.matrix([[-1,1],[-1,1]])*.25 #kernel for computing dx
 	kernelY = np.matrix([[-1,-1],[1,1]])*.25 #kernel for computing dy
@@ -125,8 +89,8 @@ def getPOI(xSize, ySize, kernelSize):
 	return POI
 
 def LK():
-	KERNEL = 5 #must be odd/
-	FILTER = 7
+	KERNEL = 13 #must be odd/
+	FILTER = 5
 
 	#get your first image
 	count = 0
