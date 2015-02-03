@@ -41,8 +41,13 @@ def HS(im1, im2, alpha, ite,):
 		uAvg = cv2.filter2D(u,-1,kernel)
 		vAvg = cv2.filter2D(v,-1,kernel)
 
-		u = uAvg - (np.multiply(fx,(np.multiply(fx,uAvg)+np.multiply(fy,vAvg)+ft)))
-		u = np.divide(u,(alpha**2 + fx**2 + fy**2))
+		u = (fx.dot(uAvg)+fy.dot(vAvg)+ft).dot(ft)
+		# print np.linalg.norm(u)
+		print np.linalg.norm(ft)
+		u = uAvg - u/(alpha+fx**2+fy**2)
+
+		# u = uAvg - (np.multiply(fx,(np.multiply(fx,uAvg)+np.multiply(fy,vAvg)+ft)))
+		# u = np.divide(u,(alpha**2 + fx**2 + fy**2))
 		v = vAvg - (np.multiply(fy,(np.multiply(fx,vAvg)+np.multiply(fy,vAvg)+ft)))
 		v = np.divide(v,(alpha**2 + fx**2 + fy**2))
 		# print i
