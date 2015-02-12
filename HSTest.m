@@ -64,11 +64,15 @@ end
 if size(size(im2),2)==3
     im2=rgb2gray(im2);
 end
+
+
 im1=double(im1);
 im2=double(im2);
 
 im1=smoothImg(im1,1);
 im2=smoothImg(im2,1);
+
+disp(im1(101,101))
 
 tic;
 

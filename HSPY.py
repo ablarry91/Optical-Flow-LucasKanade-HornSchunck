@@ -6,19 +6,6 @@ import time
 FILTER = 7
 count = 0
 
-#upload images# 
-# directory = 'box/box.'
-# directory = 'office/office.'
-# directory = 'rubic/rubic.'
-directory = 'sphere/sphere.'
-fileName = directory + str(count) + '.bmp'
-imgOld = cv2.imread(fileName,0)
-imgOld = cv2.GaussianBlur(imgOld,(FILTER,FILTER),1)
-
-count += 1
-imgNew = cv2.imread(fileName,0)
-imgNew = cv2.GaussianBlur(imgNew,(FILTER,FILTER),1)
-
 def HS(im1, im2, alpha, ite,):
 
 	#set up initial velocities
@@ -93,5 +80,23 @@ def compareGraphs():
 		# print i
 	# plt.arrow(POI[:,0,0],POI[:,0,1],0,-5)
 	plt.show()
+
+#upload images# 
+directory = 'box/box.'
+# directory = 'office/office.'
+# directory = 'rubic/rubic.'
+# directory = 'sphere/sphere.'
+fileName = directory + str(count) + '.bmp'
+imgOld = cv2.imread(fileName,0)
+# imgOld = cv2.GaussianBlur(imgOld,(FILTER,FILTER),1)
+imgOld = smoothImage(imgOld,1)
+
+count += 1
+imgNew = cv2.imread(fileName,0)
+# imgNew = cv2.GaussianBlur(imgNew,(FILTER,FILTER),1)
+imgNew = smoothImage(imgNew,1)
+
+
+
 [u,v] = HS(imgOld, imgNew, 1, 100)
 compareGraphs()

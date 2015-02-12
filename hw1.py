@@ -96,9 +96,9 @@ def LK():
 	#get your first image
 	count = 0
 	# directory = 'box/box.'
-	# directory = 'office/office.'
+	directory = 'office/office.'
 	# directory = 'rubic/rubic.'
-	directory = 'sphere/sphere.'
+	# directory = 'sphere/sphere.'
 	fileName = directory + str(count) + '.bmp'
 	imgOld = cv2.imread(fileName,0)
 	imgOld = cv2.GaussianBlur(imgOld,(FILTER,FILTER),1)
